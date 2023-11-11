@@ -25,7 +25,7 @@ public class MapperTests {
     public void testSelectUser(){
         User user = userMapper.selectById(101);
         System.out.println(user);
-        user = userMapper.selectByUserName("liubei");
+        user = userMapper.selectByUserName("niuke");
         System.out.println(user);
         user = userMapper.selectByEmail("nowcoder101@sina.com");
         System.out.println(user);
