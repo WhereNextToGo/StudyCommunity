@@ -1,7 +1,9 @@
 package com.cs_liudi.community.service;
 
+import com.cs_liudi.community.dao.LoginTicketmapper;
 import com.cs_liudi.community.dao.UserMapper;
 import com.cs_liudi.community.entity.CommunityConstant;
+import com.cs_liudi.community.entity.LoginTicket;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.util.CommunityUtils;
 import com.cs_liudi.community.util.MailClient;
@@ -13,6 +15,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +25,9 @@ import java.util.Random;
 public class UserService implements CommunityConstant{
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private LoginTicketmapper loginTicketmapper;
 
     @Autowired
     private MailClient mailClient;
@@ -95,5 +101,85 @@ public class UserService implements CommunityConstant{
         }else{
             return ACTIVATION_FAILURE;
         }
+    }
+    //处理登录业务
+    public HashMap<String,Object> CheckLogin(String username, String password,  int expiredSeconds){
+        HashMap<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(username)){
+            map.put("usernameMsg","用户名不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(password)){
+            map.put("passwordMsg","密码不能为空！");
+            return map;
+        }
+        User user = userMapper.selectByUserName(username);
+        if (user == null){
+            map.put("usernameMsg","用户名不存在！");
+            return map;
+        }
+        if (user.getStatus() == 0){
+            map.put("usernameMsg","用户未激活！");
+            return map;
+        }
+        password = CommunityUtils.MD5(password+user.getSalt());
+        if (!user.getPassword().equals(password)){
+            map.put("passwordMsg","密码不正确！");
+            return map;
+        }
+        LoginTicket ticket = new LoginTicket();
+        ticket.setUserId(user.getId());
+        ticket.setStatus(0);
+        ticket.setTicket(CommunityUtils.generateUUID());
+        ticket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+        loginTicketmapper.insertLoginTicket(ticket);
+        map.put("ticket",ticket.getTicket());
+        return map;
+    }
+    //处理退出登录业务
+    public void logout(String ticket){
+        loginTicketmapper.updateLoginTicketStatus(ticket,1);
+    }
+
+    //处理忘记密码业务
+    public HashMap<String,Object> forgetPassword(String email,String password){
+        HashMap<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg", "邮箱不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(password)){
+            map.put("passwordMsg", "密码不能为空！");
+            return map;
+        }
+        User user = userMapper.selectByEmail(email);
+        if (user == null) {
+            map.put("emailMsg", "邮箱不存在！");
+            return map;
+        }
+
+        userMapper.updatePassword(user.getId(),password);
+        return map;
+    }
+
+    public HashMap<String,Object> sendForgetKaptchaMail(String email){
+        HashMap<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg", "邮箱不能为空！");
+            return map;
+        }
+        User user = userMapper.selectByEmail(email);
+        if (user == null) {
+            map.put("emailMsg", "邮箱不存在！");
+            return map;
+        }
+        String code = CommunityUtils.generateUUID().substring(0,6);
+        Context context = new Context();
+        context.setVariable("email",email);
+        context.setVariable("code",code);
+        String content = templateEngine.process("/mail/forget", context);
+        mailClient.sendMail(email,"找回密码",content);
+        map.put("code",code);
+        return map;
     }
 }

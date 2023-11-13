@@ -1,23 +1,27 @@
 package com.cs_liudi.community.controller;
 
 import com.cs_liudi.community.entity.CommunityConstant;
+import com.cs_liudi.community.entity.LoginTicket;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.service.UserService;
 import com.google.code.kaptcha.Producer;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -27,6 +31,9 @@ public class LoginController implements CommunityConstant {
 
     @Autowired
     private Producer producer;
+
+    @Value("{server.servlet.context-path}")
+    private String contextPath;
 
     @Autowired
     private UserService userService;
@@ -66,7 +73,7 @@ public class LoginController implements CommunityConstant {
         return "/site/operate-result";
     }
 
-    @RequestMapping("/login")
+    @RequestMapping(path = "/login",method = RequestMethod.GET)
     public String login(){
         return "/site/login";
     }
@@ -85,7 +92,51 @@ public class LoginController implements CommunityConstant {
         } catch (Exception e) {
            logger.error("响应验证码失败"+e.getMessage());
         }
-
-
     }
+    @RequestMapping(path="/login",method = RequestMethod.POST)
+    public String login(String username,String password,String code, boolean rememberme,Model model,
+                        HttpSession session,HttpServletResponse response){
+        String kaptcha = (String) session.getAttribute("kaptcha");
+        if (StringUtils.isBlank(kaptcha)|| StringUtils.isBlank(code) || !kaptcha.toLowerCase().equals(code)){
+            model.addAttribute("codeMsg","验证码错误！");
+            return "site/login";
+        }
+        int expriedSeconds = rememberme ? REMEMBER_EXPIRED_SECONDS : DEFAULT_EXPIRED_SECONDS;
+        HashMap<String, Object> map = userService.CheckLogin(username, password, expriedSeconds);
+        if (map.containsKey("ticket")){
+            Cookie cookie = new Cookie("ticket",map.get("ticket").toString());
+            cookie.setPath(contextPath);
+            cookie.setMaxAge(expriedSeconds);
+            response.addCookie(cookie);
+            return "redirect:/index";
+        }else{
+            model.addAttribute("usernameMsg",map.get("usernameMsg"));
+            model.addAttribute("passwordMsg",map.get("passwordMsg"));
+//            model.addAttribute("usernameMsg",map.get("usernameMsg"));
+            return "site/login";
+        }
+    }
+
+    @RequestMapping(path = "/logout",method = RequestMethod.GET)
+    public String logout(@CookieValue("ticket") String ticket){
+        userService.logout(ticket);
+        return "redirect:/login";
+    }
+
+    @RequestMapping(path = "/forget",method = RequestMethod.GET)
+    public String forgetPassword(){
+        return "site/forget";
+    }
+    @RequestMapping("/forget/kaptcha")
+    public void getForgetKaptcha(@RequestParam("email") String email,Model model,HttpSession session) {
+        HashMap<String, Object> map = userService.sendForgetKaptchaMail(email);
+        if (!map.containsKey("code")){
+            model.addAttribute("emailMsg",map.get("emailMsg"));
+        }else{
+            session.setAttribute("forget_email_code",map.get("code"));
+            model.addAttribute("emailMsg","验证码发送成功");
+        }
+    }
+
+
 }

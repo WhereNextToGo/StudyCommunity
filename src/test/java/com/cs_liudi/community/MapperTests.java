@@ -1,8 +1,10 @@
 package com.cs_liudi.community;
 
 import com.cs_liudi.community.dao.DiscussPostMapper;
+import com.cs_liudi.community.dao.LoginTicketmapper;
 import com.cs_liudi.community.dao.UserMapper;
 import com.cs_liudi.community.entity.DiscussPost;
+import com.cs_liudi.community.entity.LoginTicket;
 import com.cs_liudi.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.omg.CORBA.PUBLIC_MEMBER;
@@ -21,6 +23,9 @@ public class MapperTests {
     private UserMapper userMapper;
     @Autowired
     private DiscussPostMapper discussPostMapper;
+
+    @Autowired
+    private LoginTicketmapper loginTicketmapper;
     @Test
     public void testSelectUser(){
         User user = userMapper.selectById(101);
@@ -69,4 +74,24 @@ public class MapperTests {
         int rows = discussPostMapper.selectDiscussPostRows(149);
         System.out.println(rows);
     }
+
+    @Test
+    public void testInsertLoginTicket(){
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(101);
+        loginTicket.setTicket("abc");
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 * 10));
+        loginTicketmapper.insertLoginTicket(loginTicket);
+    }
+    @Test
+    public void testSelectLoginTicket(){
+        LoginTicket ticket = loginTicketmapper.selectLoginTicketByticket("abc");
+        System.out.println(ticket);
+        loginTicketmapper.updateLoginTicketStatus("abc", 1);
+        ticket = loginTicketmapper.selectLoginTicketByticket("abc");
+        System.out.println(ticket);
+
+    }
+
 }
