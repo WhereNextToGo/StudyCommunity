@@ -8,6 +8,8 @@ import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.util.CommunityUtils;
 import com.cs_liudi.community.util.MailClient;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,14 +17,15 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.annotation.Resource;
+import javax.ejb.Timeout;
 import javax.servlet.http.HttpSession;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class UserService implements CommunityConstant{
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     private UserMapper userMapper;
 
@@ -173,13 +176,29 @@ public class UserService implements CommunityConstant{
             map.put("emailMsg", "邮箱不存在！");
             return map;
         }
-        String code = CommunityUtils.generateUUID().substring(0,6);
+        String code = CommunityUtils.generateUUID().substring(0,4);
         Context context = new Context();
         context.setVariable("email",email);
         context.setVariable("code",code);
         String content = templateEngine.process("/mail/forget", context);
         mailClient.sendMail(email,"找回密码",content);
         map.put("code",code);
+        return map;
+    }
+
+
+    public HashMap<String,Object> resetPassword(String email,String password){
+        HashMap<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(email)){
+            map.put("emailMsg","邮箱不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(password)){
+            map.put("passwordMsg","密码不能为空！");
+            return map;
+        }
+        User user = userMapper.selectByEmail(email);
+        userMapper.updatePassword(user.getId(),CommunityUtils.MD5(password+user.getSalt()));
         return map;
     }
 }

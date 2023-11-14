@@ -4,6 +4,8 @@ import com.cs_liudi.community.entity.CommunityConstant;
 import com.cs_liudi.community.entity.LoginTicket;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.service.UserService;
+import com.cs_liudi.community.util.CommunityUtils;
+import com.cs_liudi.community.util.MailClient;
 import com.google.code.kaptcha.Producer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
@@ -23,6 +27,8 @@ import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Controller
 public class LoginController implements CommunityConstant {
@@ -34,6 +40,12 @@ public class LoginController implements CommunityConstant {
 
     @Value("{server.servlet.context-path}")
     private String contextPath;
+
+    @Autowired
+    private TemplateEngine templateEngine;
+
+    @Autowired
+    private MailClient mailClient;
 
     @Autowired
     private UserService userService;
@@ -97,7 +109,7 @@ public class LoginController implements CommunityConstant {
     public String login(String username,String password,String code, boolean rememberme,Model model,
                         HttpSession session,HttpServletResponse response){
         String kaptcha = (String) session.getAttribute("kaptcha");
-        if (StringUtils.isBlank(kaptcha)|| StringUtils.isBlank(code) || !kaptcha.toLowerCase().equals(code)){
+        if (StringUtils.isBlank(kaptcha)|| StringUtils.isBlank(code) || !code.toLowerCase().equals(kaptcha)){
             model.addAttribute("codeMsg","验证码错误！");
             return "site/login";
         }
@@ -127,16 +139,76 @@ public class LoginController implements CommunityConstant {
     public String forgetPassword(){
         return "site/forget";
     }
-    @RequestMapping("/forget/kaptcha")
-    public void getForgetKaptcha(@RequestParam("email") String email,Model model,HttpSession session) {
+
+//    @RequestMapping("/forget/kaptcha")
+//    public String getForgetKaptcha(@RequestParam("email") String email,Model model,HttpSession session) {
+//        HashMap<String, Object> map = userService.sendForgetKaptchaMail(email);
+//        if (!map.containsKey("code")){
+//            model.addAttribute("emailMsg",map.get("emailMsg"));
+//        }else{
+//            session.setAttribute("forget_email_code",map.get("code"));
+//            model.addAttribute("emailMsg","验证码发送成功");
+//        }
+//        return "/site/forget";
+//    }
+
+    //生成并返回忘记密码的验证码，设置五分钟的过期时间
+    @RequestMapping(path = "/forget/code", method = RequestMethod.GET)
+    @ResponseBody
+    public String getForgetCode(String email, HttpSession session) {
+        if (StringUtils.isBlank(email)) {
+            return CommunityUtils.getJSONString(1, "邮箱不能为空！");
+        }
         HashMap<String, Object> map = userService.sendForgetKaptchaMail(email);
         if (!map.containsKey("code")){
+            return CommunityUtils.getJSONString(2, "邮箱错误！不存在！");
+        }
+        // 发送邮件
+//        Context context = new Context();
+//        context.setVariable("email", email);
+//        String code = CommunityUtils.generateUUID().substring(0, 4);
+//        context.setVariable("verifyCode", code);
+//        String content = templateEngine.process("/mail/forget", context);
+//        mailClient.sendMail(email, "找回密码", content);
+
+        // 保存验证码
+        session.setAttribute("verifyCode", map.get("code"));
+        removeAttribute("verifyCode",session);
+        return CommunityUtils.getJSONString(0);
+    }
+    @RequestMapping(path = "/forget",method = RequestMethod.POST)
+    public String resetPassword(String email,String password,String verifyCode,Model model,HttpSession session){
+        String kaptcha = (String) session.getAttribute("verifyCode");
+        if (StringUtils.isBlank(verifyCode) || StringUtils.isBlank(kaptcha) || !verifyCode.toLowerCase().equals(kaptcha)){
+            model.addAttribute("codeMsg","验证码错误");
+            return "site/forget";
+        }
+        HashMap<String,Object> map = userService.resetPassword(email,password);
+        if (null != map){
+
+            return "redirect:/login";
+        }else {
             model.addAttribute("emailMsg",map.get("emailMsg"));
-        }else{
-            session.setAttribute("forget_email_code",map.get("code"));
-            model.addAttribute("emailMsg","验证码发送成功");
+            model.addAttribute("passwordMsg",map.get("passwordMsg"));
+            return "site/forget";
         }
     }
 
 
+    private void removeAttribute(String name,HttpSession session){
+        Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                   @Override
+                   public void run() {
+                       try {
+                           session.removeAttribute(name);
+                           timer.cancel();
+                           logger.info("忘记密码请求的验证码过期，删除session中的验证码");
+                       } catch (Exception e) {
+                           logger.error("删除session中的验证码出错"+e.getMessage());
+                       }
+                   }
+               },
+    1*60*1000);
+    }
 }
