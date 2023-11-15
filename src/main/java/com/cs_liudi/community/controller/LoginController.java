@@ -25,10 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 @Controller
 public class LoginController implements CommunityConstant {
@@ -109,7 +106,7 @@ public class LoginController implements CommunityConstant {
     public String login(String username,String password,String code, boolean rememberme,Model model,
                         HttpSession session,HttpServletResponse response){
         String kaptcha = (String) session.getAttribute("kaptcha");
-        if (StringUtils.isBlank(kaptcha)|| StringUtils.isBlank(code) || !code.toLowerCase().equals(kaptcha)){
+        if (StringUtils.isBlank(kaptcha)|| StringUtils.isBlank(code) || !kaptcha.toLowerCase().equals(code.toLowerCase(Locale.ROOT))){
             model.addAttribute("codeMsg","验证码错误！");
             return "site/login";
         }
@@ -209,6 +206,6 @@ public class LoginController implements CommunityConstant {
                        }
                    }
                },
-    1*60*1000);
+    5*60*1000);
     }
 }

@@ -201,4 +201,8 @@ public class UserService implements CommunityConstant{
         userMapper.updatePassword(user.getId(),CommunityUtils.MD5(password+user.getSalt()));
         return map;
     }
+
+    public LoginTicket getLoginTickget(String ticket){
+        return loginTicketmapper.selectLoginTicketByticket(ticket);
+    }
 }
