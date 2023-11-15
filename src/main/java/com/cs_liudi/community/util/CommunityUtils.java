@@ -40,4 +40,24 @@ public class CommunityUtils {
     public static String getJSONString(int code) {
         return getJSONString(code, null, null);
     }
+
+    /**
+     * 判断是否为允许的上传文件类型,true表示允许
+     */
+    public static boolean checkFile(String fileName) {
+        //设置允许上传文件类型
+        String suffixList = "jpg,png,ico,bmp,jpeg";
+        // 获取文件后缀
+        String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+        if (suffixList.contains(suffix.trim().toLowerCase())) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 判断是否为允许的上传文件类型,true表示允许
+     */
+    public static boolean checkFileSize(Long size,int sizeLimit) {
+        return size <= sizeLimit;
+    }
 }
