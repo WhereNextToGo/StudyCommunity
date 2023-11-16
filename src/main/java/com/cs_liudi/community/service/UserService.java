@@ -6,8 +6,10 @@ import com.cs_liudi.community.entity.CommunityConstant;
 import com.cs_liudi.community.entity.LoginTicket;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.util.CommunityUtils;
+import com.cs_liudi.community.util.HostHolder;
 import com.cs_liudi.community.util.MailClient;
 import org.apache.commons.lang3.StringUtils;
+import org.omg.CORBA.PRIVATE_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class UserService implements CommunityConstant{
 
     @Value("${server.servlet.context-path}")
     private String contextPath;
+
+    @Autowired
+    private HostHolder hostHolder;
     //查找用户
     public User findUserById(int id){
         return userMapper.selectById(id);
@@ -208,5 +213,33 @@ public class UserService implements CommunityConstant{
 
     public void setuserHeader(int id,String headerUrl){
         userMapper.updateHeader(id,headerUrl);
+    }
+
+    public HashMap<String,Object> changePassword(String oldPassword,String newPassword,String confirmPassword){
+        HashMap<String, Object> map = new HashMap<>();
+        User user = hostHolder.getUser();
+        String password = user.getPassword();
+        if (StringUtils.isBlank(oldPassword)){
+            map.put("oldPasswordMsg","原密码不能为空");
+            return map;
+        }
+        if (!password.equals(CommunityUtils.MD5(oldPassword+user.getSalt()))){
+            map.put("oldPasswordMsg","原密码不正确");
+            return map;
+        }
+        if (StringUtils.isBlank(newPassword)){
+            map.put("newPasswordMsg","新密码不能为空");
+            return map;
+        }
+        if (StringUtils.isBlank(confirmPassword)){
+            map.put("confirmPasswordMsg","确认密码不能为空");
+            return map;
+        }
+        if (!confirmPassword.equals(newPassword)){
+            map.put("confirmPasswordMsg","新密码与确认密码不一致，请重新输入");
+            return map;
+        }
+        userMapper.updatePassword(user.getId(),CommunityUtils.MD5(newPassword+user.getSalt()));
+        return null;
     }
 }

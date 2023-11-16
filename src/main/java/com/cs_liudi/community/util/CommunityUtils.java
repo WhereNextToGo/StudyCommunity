@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.DigestUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,10 +55,11 @@ public class CommunityUtils {
         }
         return false;
     }
-    /**
-     * 判断是否为允许的上传文件类型,true表示允许
-     */
-    public static boolean checkFileSize(Long size,int sizeLimit) {
-        return size <= sizeLimit;
-    }
+//    /**
+//     * 判断是否为允许的上传文件类型,true表示允许
+//     */
+//    public static boolean checkFileSize(Long size,int sizeLimit) {
+//        return size <= sizeLimit;
+//    }
+
 }

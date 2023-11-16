@@ -6,7 +6,6 @@ import com.cs_liudi.community.service.UserService;
 import com.cs_liudi.community.util.CommunityUtils;
 import com.cs_liudi.community.util.HostHolder;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +22,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/user")
-public class UserController implements CommunityConstant {
+public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -101,6 +101,18 @@ public class UserController implements CommunityConstant {
 //            throw new RuntimeException("获取头像失败,服务器发生异常",e);
         }
 
+    }
+    @RequestMapping(path = "/resetPassword", method = RequestMethod.POST)
+    public String settingPassword(String oldPassword, String newPassword, String confirmPassword, Model model){
+        HashMap<String, Object> map = userService.changePassword(oldPassword, newPassword, confirmPassword);
+        if (map == null){
+            return "redirect:/index";
+        }else{
+            model.addAttribute("oldPasswordMsg",map.get("oldPasswordMsg"));
+            model.addAttribute("newPasswordMsg",map.get("newPasswordMsg"));
+            model.addAttribute("confirmPasswordMsg",map.get("confirmPasswordMsg"));
+            return "/site/setting";
+        }
     }
 
 }
