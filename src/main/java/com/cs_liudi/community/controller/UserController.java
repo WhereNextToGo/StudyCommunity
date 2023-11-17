@@ -1,5 +1,6 @@
 package com.cs_liudi.community.controller;
 
+import com.cs_liudi.community.LoginRequired;
 import com.cs_liudi.community.entity.CommunityConstant;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.service.UserService;
@@ -45,11 +46,13 @@ public class UserController {
     @Autowired
     private HostHolder hostHolder;
 
+    @LoginRequired
     @RequestMapping("/setting")
     public String getUserSetting(){
         return "site/setting";
     }
 
+    @LoginRequired
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     public String uploadHeader(MultipartFile headerImage, Model model){
         if (headerImage == null){
@@ -102,6 +105,7 @@ public class UserController {
         }
 
     }
+    @LoginRequired
     @RequestMapping(path = "/resetPassword", method = RequestMethod.POST)
     public String settingPassword(String oldPassword, String newPassword, String confirmPassword, Model model){
         HashMap<String, Object> map = userService.changePassword(oldPassword, newPassword, confirmPassword);
