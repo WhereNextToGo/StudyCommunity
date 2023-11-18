@@ -4,10 +4,14 @@ package com.cs_liudi.community.controller;
 import com.cs_liudi.community.entity.DiscussPost;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.service.DiscussPostService;
+import com.cs_liudi.community.service.UserService;
 import com.cs_liudi.community.util.CommunityUtils;
 import com.cs_liudi.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -20,6 +24,9 @@ public class DiscussPostController {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private DiscussPostService discussPostService;
@@ -39,4 +46,14 @@ public class DiscussPostController {
         discussPostService.addDiscussPost(discussPost);
         return CommunityUtils.getJSONString(0,"恭喜！发布成功！");
     }
+
+    @RequestMapping(path="detail/{discussPostId}",method = RequestMethod.GET)
+    public String getDiscussPostDetail(@PathVariable("discussPostId") int discussPostId, Model model){
+        DiscussPost discussPost = discussPostService.getDiscussPostById(discussPostId);
+        model.addAttribute("post",discussPost);
+        User user = userService.findUserById(discussPost.getUserId());
+        model.addAttribute("user",user);
+        return "site/discuss-detail";
+    }
+
 }
