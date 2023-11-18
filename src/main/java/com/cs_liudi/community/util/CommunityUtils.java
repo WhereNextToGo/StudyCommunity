@@ -55,6 +55,14 @@ public class CommunityUtils {
         }
         return false;
     }
+
+//    public static void main(String[] args) {
+//        Map<String,Object> map = new HashMap<>();
+//        map.put("name","张三");
+//        map.put("age",30);
+//        String res = getJSONString(0,"操作成功",map);
+//        System.out.println(res);
+//    }
 //    /**
 //     * 判断是否为允许的上传文件类型,true表示允许
 //     */

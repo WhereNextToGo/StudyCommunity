@@ -164,4 +164,13 @@ public class HelloController {
         System.out.println(session.getAttribute("id")+" "+session.getAttribute("name"));
         return "get session";
     }
+    //test AJAX
+    @RequestMapping(path = "/ajax",method = RequestMethod.POST)
+    @ResponseBody
+    public String testAJAX(String name,String age){
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("name",name);
+        map.put("age",age);
+        return CommunityUtils.getJSONString(101,"success",map);
+    }
 }
