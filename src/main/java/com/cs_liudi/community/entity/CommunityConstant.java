@@ -27,4 +27,15 @@ public interface CommunityConstant {
      * 图片上传的最大值
      */
     int MAX_IMAGE_UPLOAD_SIZE = 1024 * 1024;
+
+    /**
+     * 评论的实体类型——post
+     */
+    int ENTITY_TYPE_POST = 1;
+    /**
+     * 评论的实体类型——回复评论
+     */
+    int ENTITY_TYPE_COMMENTS = 2;
+
+
 }
