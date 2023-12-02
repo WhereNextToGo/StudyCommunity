@@ -2,9 +2,11 @@ package com.cs_liudi.community;
 
 import com.cs_liudi.community.dao.DiscussPostMapper;
 import com.cs_liudi.community.dao.LoginTicketmapper;
+import com.cs_liudi.community.dao.MessageMapper;
 import com.cs_liudi.community.dao.UserMapper;
 import com.cs_liudi.community.entity.DiscussPost;
 import com.cs_liudi.community.entity.LoginTicket;
+import com.cs_liudi.community.entity.Message;
 import com.cs_liudi.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.omg.CORBA.PUBLIC_MEMBER;
@@ -26,6 +28,9 @@ public class MapperTests {
 
     @Autowired
     private LoginTicketmapper loginTicketmapper;
+
+    @Autowired
+    private MessageMapper messageMapper;
     @Test
     public void testSelectUser(){
         User user = userMapper.selectById(101);
@@ -93,5 +98,21 @@ public class MapperTests {
         System.out.println(ticket);
 
     }
-
+    @Test
+    public void testSelectLetters(){
+        List<Message> conversations = messageMapper.selectConversations(111, 0, 20);
+        for (Message conversation :conversations){
+            System.out.println(conversation);
+        }
+        int count  = messageMapper.selectConversationCount(111);
+        System.out.println(count);
+        List<Message> letters  = messageMapper.selectLetters("111_112",0,10);
+        for (Message letter :letters){
+            System.out.println(letter);
+        }
+        count = messageMapper.selectLetterCount("111_112");
+        System.out.println(count);
+        count = messageMapper.selectUnreadLetterCount(131,"111_131");
+        System.out.println(count);
+    }
 }

@@ -14,7 +14,7 @@ function publish() {
 			$("#hintModal").modal("show");
 			setTimeout(function(){
 				$("#hintModal").modal("hide");
-				if (data.code == 0){
+				if (data.code === 0){
 					window.location.reload();
 				}
 			}, 2000);
