@@ -5,6 +5,7 @@ import com.cs_liudi.community.entity.Page;
 import com.cs_liudi.community.entity.User;
 import com.cs_liudi.community.service.DiscussPostService;
 import com.cs_liudi.community.service.UserService;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,5 +46,10 @@ public class HomeController {
         }
 //        return discussPosts;
         return "/index";
+    }
+
+    @RequestMapping(path = "/error",method = RequestMethod.GET)
+    public String getErrorPage(){
+        return "/error/500";
     }
 }

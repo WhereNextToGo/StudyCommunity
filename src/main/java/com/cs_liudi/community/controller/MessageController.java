@@ -28,6 +28,7 @@ public class MessageController {
     private UserService userService;
     @RequestMapping(path = "/letter/list",method = RequestMethod.GET)
     public String getLetterList(Model model, Page page){
+//        Integer.valueOf("abc");
         User user = hostHolder.getUser();
         page.setLimit(5);
         page.setPath("/letter/list");
@@ -90,6 +91,7 @@ public class MessageController {
     @RequestMapping(path = "/letter/send",method = RequestMethod.POST)
     @ResponseBody
     public String sendMessage(String toName,String content){
+//        Integer.valueOf("abc");
         User toUser = userService.findUserByName(toName);
         if (toUser == null){
             return CommunityUtils.getJSONString(1,"用户不存在！");
