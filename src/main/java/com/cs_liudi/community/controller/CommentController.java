@@ -1,4 +1,4 @@
-package com.cs_liudi.community.controller.interceptor;
+package com.cs_liudi.community.controller;
 
 import com.cs_liudi.community.entity.Comment;
 import com.cs_liudi.community.entity.User;
